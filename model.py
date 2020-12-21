@@ -100,6 +100,11 @@ class Model:
                         self.trace(sum_loss, batch_num, multi_batch_start_time)
                         sum_loss = 0
                         multi_batch_start_time = time.time()
+                    if batch_num % 50 == 0:
+                        old_time = time.time()
+                        print('Start saving')
+                        self.save_model(self.sess, self.config.SAVE_PATH + '.final')
+                        print('Saved in', time.time() - old_time, 'seconds')
 
 
             except tf.errors.OutOfRangeError:
