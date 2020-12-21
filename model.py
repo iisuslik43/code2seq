@@ -100,10 +100,10 @@ class Model:
                         self.trace(sum_loss, batch_num, multi_batch_start_time)
                         sum_loss = 0
                         multi_batch_start_time = time.time()
-                    if batch_num % 50 == 0:
+                    if batch_num % 200 == 0:
                         old_time = time.time()
                         print('Start saving')
-                        self.save_model(self.sess, self.config.SAVE_PATH + '.final')
+                        self.save_model(self.sess, self.config.SAVE_PATH + '.' + str(batch_num))
                         print('Saved in', time.time() - old_time, 'seconds')
 
 
