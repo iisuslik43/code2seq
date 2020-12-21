@@ -42,6 +42,8 @@ class Reader:
         if self.file_path is not None:
             self.output_tensors = self.compute_output()
 
+        # self.sess = tf.Session()
+
     @classmethod
     def get_subtoken_table(cls, subtoken_to_index):
         if cls.class_subtoken_table is None:
@@ -74,7 +76,9 @@ class Reader:
     def process_dataset(self, *row_parts):
         row_parts = list(row_parts)
         word = row_parts[0]  # (, )
-
+        # s = self.sess
+        # WORD = word.eval(session=s)
+        # WORD1 = word.eval(session=s)
         if not self.is_evaluating and self.config.RANDOM_CONTEXTS:
             all_contexts = tf.stack(row_parts[1:])
             all_contexts_padded = tf.concat([all_contexts, [self.context_pad]], axis=-1)
@@ -87,7 +91,7 @@ class Reader:
             contexts = tf.gather(all_contexts, rand_indices)  # (max_contexts,)
         else:
             contexts = row_parts[1:(self.config.MAX_CONTEXTS + 1)]  # (max_contexts,)
-
+        # CONTEXTS = contexts.eval(session=s)
         # contexts: (max_contexts, )
         split_contexts = tf.string_split(contexts, delimiter=',', skip_empty=False)
         sparse_split_contexts = tf.sparse.SparseTensor(indices=split_contexts.indices,
@@ -98,6 +102,7 @@ class Reader:
             shape=[self.config.MAX_CONTEXTS, 3])  # (batch, max_contexts, 3)
 
         split_target_labels = tf.string_split(tf.expand_dims(word, -1), delimiter='|')
+        # SPLIT_WORD = split_target_labels.eval(session=s)
         target_dense_shape = [1, tf.maximum(tf.to_int64(self.config.MAX_TARGET_PARTS),
                                             split_target_labels.dense_shape[1] + 1)]
         sparse_target_labels = tf.sparse.SparseTensor(indices=split_target_labels.indices,
@@ -117,7 +122,7 @@ class Reader:
         flat_source_strings = tf.reshape(path_source_strings, [-1])  # (max_contexts)
         split_source = tf.string_split(flat_source_strings, delimiter='|',
                                        skip_empty=False)  # (max_contexts, max_name_parts)
-
+        # SPLIT_SOURCE = split_source.eval(session=s)
         sparse_split_source = tf.sparse.SparseTensor(indices=split_source.indices, values=split_source.values,
                                                      dense_shape=[self.config.MAX_CONTEXTS,
                                                                   tf.maximum(tf.to_int64(self.config.MAX_NAME_PARTS),
@@ -132,6 +137,7 @@ class Reader:
         path_strings = tf.slice(dense_split_contexts, [0, 1], [self.config.MAX_CONTEXTS, 1])
         flat_path_strings = tf.reshape(path_strings, [-1])
         split_path = tf.string_split(flat_path_strings, delimiter='|', skip_empty=False)
+        # SPLIT_PATH = split_path.eval(session=s)
         sparse_split_path = tf.sparse.SparseTensor(indices=split_path.indices, values=split_path.values,
                                                    dense_shape=[self.config.MAX_CONTEXTS, self.config.MAX_PATH_LENGTH])
         dense_split_path = tf.sparse.to_dense(sp_input=sparse_split_path,
@@ -145,6 +151,7 @@ class Reader:
         flat_target_strings = tf.reshape(path_target_strings, [-1])  # (max_contexts)
         split_target = tf.string_split(flat_target_strings, delimiter='|',
                                        skip_empty=False)  # (max_contexts, max_name_parts)
+        # SPLIT_TARGET = split_target.eval(session=s)
         sparse_split_target = tf.sparse.SparseTensor(indices=split_target.indices, values=split_target.values,
                                                      dense_shape=[self.config.MAX_CONTEXTS,
                                                                   tf.maximum(tf.to_int64(self.config.MAX_NAME_PARTS),
@@ -178,7 +185,13 @@ class Reader:
     def compute_output(self):
         dataset = tf.data.experimental.CsvDataset(self.file_path, record_defaults=self.record_defaults, field_delim=' ',
                                                   use_quote_delim=False, buffer_size=self.config.CSV_BUFFER_SIZE)
-
+        # iterator = dataset.make_initializable_iterator()
+        # a = iterator.get_next()
+        # self.sess = tf.Session()
+        # sess = self.sess
+        # sess.run(iterator.initializer)
+        # self.process_dataset(*a)
+        # raise Exception('ASd')
         if not self.is_evaluating:
             if self.config.SAVE_EVERY_EPOCHS > 1:
                 dataset = dataset.repeat(self.config.SAVE_EVERY_EPOCHS)
